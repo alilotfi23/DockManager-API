@@ -1,0 +1,16 @@
+# Development dependencies for CI/CD and local development
+
+# Linting and formatting
+ruff
+black
+mypy
+
+# Testing
+pytest
+pytest-asyncio
+pytest-cov
+httpx
+
+# Security scanning
+pip-audit
+bandit
