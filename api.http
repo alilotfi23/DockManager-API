@@ -1,0 +1,420 @@
+### Docker Management API - HTTP Request Collection
+### Use with VS Code REST Client extension or similar tools
+
+@baseUrl = http://localhost:8000
+@apiVersion = /api/v1
+
+### ============================================
+### Health Check
+### ============================================
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Root Endpoint
+GET {{baseUrl}}/
+
+### ============================================
+### Authentication
+### ============================================
+
+### Register a new user (Viewer role)
+POST {{baseUrl}}{{apiVersion}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "password": "password123",
+  "role": "viewer"
+}
+
+### Register a new user (Admin role)
+POST {{baseUrl}}{{apiVersion}}/auth/register
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "admin@example.com",
+  "password": "adminpass123",
+  "role": "admin"
+}
+
+### Login
+POST {{baseUrl}}{{apiVersion}}/auth/login
+Content-Type: application/x-www-form-urlencoded
+
+username=testuser&password=password123
+
+### Refresh Token
+POST {{baseUrl}}{{apiVersion}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "YOUR_REFRESH_TOKEN_HERE"
+}
+
+### ============================================
+### Containers
+### ============================================
+
+@token = YOUR_ACCESS_TOKEN_HERE
+
+### List all containers (running only)
+GET {{baseUrl}}{{apiVersion}}/containers
+Authorization: Bearer {{token}}
+
+### List all containers (including stopped)
+GET {{baseUrl}}{{apiVersion}}/containers?all=true
+Authorization: Bearer {{token}}
+
+### List containers with pagination
+GET {{baseUrl}}{{apiVersion}}/containers?limit=10&offset=0
+Authorization: Bearer {{token}}
+
+### List containers filtered by status
+GET {{baseUrl}}{{apiVersion}}/containers?status=running
+Authorization: Bearer {{token}}
+
+### List containers filtered by name
+GET {{baseUrl}}{{apiVersion}}/containers?name=nginx
+Authorization: Bearer {{token}}
+
+### Get container details
+GET {{baseUrl}}{{apiVersion}}/containers/{container_id}
+Authorization: Bearer {{token}}
+
+### Create a container
+POST {{baseUrl}}{{apiVersion}}/containers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-nginx",
+  "image": "nginx:latest",
+  "ports": {
+    "80/tcp": "8080"
+  },
+  "restart_policy": "unless-stopped",
+  "labels": {
+    "app": "web"
+  }
+}
+
+### Create a container with environment variables
+POST {{baseUrl}}{{apiVersion}}/containers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-app",
+  "image": "python:3.11-slim",
+  "command": ["python", "-m", "http.server", "8000"],
+  "env": {
+    "ENV": "production",
+    "DEBUG": "false"
+  },
+  "ports": {
+    "8000/tcp": "8000"
+  }
+}
+
+### Create a container with volume mount
+POST {{baseUrl}}{{apiVersion}}/containers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-data-container",
+  "image": "nginx:latest",
+  "volumes": [
+    {
+      "source": "/host/data",
+      "target": "/container/data",
+      "type": "rw"
+    }
+  ]
+}
+
+### Start a container
+POST {{baseUrl}}{{apiVersion}}/containers/{container_id}/start
+Authorization: Bearer {{token}}
+
+### Stop a container
+POST {{baseUrl}}{{apiVersion}}/containers/{container_id}/stop
+Authorization: Bearer {{token}}
+
+### Stop a container with custom timeout
+POST {{baseUrl}}{{apiVersion}}/containers/{container_id}/stop?timeout=30
+Authorization: Bearer {{token}}
+
+### Restart a container
+POST {{baseUrl}}{{apiVersion}}/containers/{container_id}/restart
+Authorization: Bearer {{token}}
+
+### Remove a container
+DELETE {{baseUrl}}{{apiVersion}}/containers/{container_id}
+Authorization: Bearer {{token}}
+
+### Remove a container with force
+DELETE {{baseUrl}}{{apiVersion}}/containers/{container_id}?force=true
+Authorization: Bearer {{token}}
+
+### Remove a container with volumes
+DELETE {{baseUrl}}{{apiVersion}}/containers/{container_id}?remove_volumes=true
+Authorization: Bearer {{token}}
+
+### Execute command in container
+POST {{baseUrl}}{{apiVersion}}/containers/{container_id}/exec
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "command": ["ls", "-la"],
+  "working_dir": "/app"
+}
+
+### Get container logs (non-streaming)
+GET {{baseUrl}}{{apiVersion}}/containers/{container_id}/logs?tail=100
+Authorization: Bearer {{token}}
+
+### Get container logs with timestamp filter
+GET {{baseUrl}}{{apiVersion}}/containers/{container_id}/logs?since=1640995200
+Authorization: Bearer {{token}}
+
+### Stream container logs (SSE)
+GET {{baseUrl}}{{apiVersion}}/containers/{container_id}/logs/stream?tail=50
+Authorization: Bearer {{token}}
+
+### Get container stats (single snapshot)
+GET {{baseUrl}}{{apiVersion}}/containers/{container_id}/stats
+Authorization: Bearer {{token}}
+
+### Stream container stats (SSE)
+GET {{baseUrl}}{{apiVersion}}/containers/{container_id}/stats?stream=true
+Authorization: Bearer {{token}}
+
+### Prune stopped containers
+POST {{baseUrl}}{{apiVersion}}/containers/prune
+Authorization: Bearer {{token}}
+
+### ============================================
+### Images
+### ============================================
+
+### List all images
+GET {{baseUrl}}{{apiVersion}}/images
+Authorization: Bearer {{token}}
+
+### List all images (including intermediate layers)
+GET {{baseUrl}}{{apiVersion}}/images?all=true
+Authorization: Bearer {{token}}
+
+### List images filtered by name
+GET {{baseUrl}}{{apiVersion}}/images?name=nginx
+Authorization: Bearer {{token}}
+
+### Get image details
+GET {{baseUrl}}{{apiVersion}}/images/{image_id}
+Authorization: Bearer {{token}}
+
+### Pull an image
+POST {{baseUrl}}{{apiVersion}}/images/pull
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "from_image": "nginx",
+  "tag": "latest"
+}
+
+### Pull an image with specific platform
+POST {{baseUrl}}{{apiVersion}}/images/pull
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "from_image": "nginx",
+  "tag": "alpine",
+  "platform": "linux/amd64"
+}
+
+### Tag an image
+POST {{baseUrl}}{{apiVersion}}/images/tag
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "source": "nginx:latest",
+  "target": "my-registry/nginx:v1.0"
+}
+
+### Remove an image
+DELETE {{baseUrl}}{{apiVersion}}/images/{image_id}
+Authorization: Bearer {{token}}
+
+### Remove an image with force
+DELETE {{baseUrl}}{{apiVersion}}/images/{image_id}?force=true
+Authorization: Bearer {{token}}
+
+### Prune dangling images
+POST {{baseUrl}}{{apiVersion}}/images/prune
+Authorization: Bearer {{token}}
+
+### Prune all unused images
+POST {{baseUrl}}{{apiVersion}}/images/prune?dangling=false
+Authorization: Bearer {{token}}
+
+### ============================================
+### Volumes
+### ============================================
+
+### List all volumes
+GET {{baseUrl}}{{apiVersion}}/volumes
+Authorization: Bearer {{token}}
+
+### Get volume details
+GET {{baseUrl}}{{apiVersion}}/volumes/{volume_name}
+Authorization: Bearer {{token}}
+
+### Create a volume
+POST {{baseUrl}}{{apiVersion}}/volumes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-volume",
+  "driver": "local",
+  "labels": {
+    "env": "production"
+  }
+}
+
+### Create a volume with driver options
+POST {{baseUrl}}{{apiVersion}}/volumes
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-nfs-volume",
+  "driver": "local",
+  "driver_opts": {
+    "type": "nfs",
+    "o": "addr=192.168.1.1,rw",
+    "device": ":/path/to/dir"
+  }
+}
+
+### Remove a volume
+DELETE {{baseUrl}}{{apiVersion}}/volumes/{volume_name}
+Authorization: Bearer {{token}}
+
+### Remove a volume with force
+DELETE {{baseUrl}}{{apiVersion}}/volumes/{volume_name}?force=true
+Authorization: Bearer {{token}}
+
+### Prune unused volumes
+POST {{baseUrl}}{{apiVersion}}/volumes/prune
+Authorization: Bearer {{token}}
+
+### ============================================
+### Networks
+### ============================================
+
+### List all networks
+GET {{baseUrl}}{{apiVersion}}/networks
+Authorization: Bearer {{token}}
+
+### List networks filtered by name
+GET {{baseUrl}}{{apiVersion}}/networks?name=my-network
+Authorization: Bearer {{token}}
+
+### Get network details
+GET {{baseUrl}}{{apiVersion}}/networks/{network_id}
+Authorization: Bearer {{token}}
+
+### Create a bridge network
+POST {{baseUrl}}{{apiVersion}}/networks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-network",
+  "driver": "bridge"
+}
+
+### Create a custom network with subnet
+POST {{baseUrl}}{{apiVersion}}/networks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-custom-network",
+  "driver": "bridge",
+  "subnet": "172.20.0.0/16",
+  "gateway": "172.20.0.1",
+  "ip_range": "172.20.0.0/24"
+}
+
+### Create an internal network
+POST {{baseUrl}}{{apiVersion}}/networks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "my-internal-network",
+  "driver": "bridge",
+  "internal": true
+}
+
+### Remove a network
+DELETE {{baseUrl}}{{apiVersion}}/networks/{network_id}
+Authorization: Bearer {{token}}
+
+### Connect container to network
+POST {{baseUrl}}{{apiVersion}}/networks/{network_id}/connect
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "container": "container_name_or_id",
+  "endpoint_config": {
+    "IPAMConfig": {
+      "IPv4Address": "172.20.0.10"
+    }
+  }
+}
+
+### Disconnect container from network
+POST {{baseUrl}}{{apiVersion}}/networks/{network_id}/disconnect
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "container": "container_name_or_id",
+  "force": false
+}
+
+### Prune unused networks
+POST {{baseUrl}}{{apiVersion}}/networks/prune
+Authorization: Bearer {{token}}
+
+### ============================================
+### System
+### ============================================
+
+### Get Docker daemon info
+GET {{baseUrl}}{{apiVersion}}/system/info
+Authorization: Bearer {{token}}
+
+### Get Docker version
+GET {{baseUrl}}{{apiVersion}}/system/version
+Authorization: Bearer {{token}}
+
+### Get disk usage
+GET {{baseUrl}}{{apiVersion}}/system/df
+Authorization: Bearer {{token}}
+
+### Prune all unused resources
+POST {{baseUrl}}{{apiVersion}}/system/prune
+Authorization: Bearer {{token}}

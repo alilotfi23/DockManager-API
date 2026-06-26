@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  docker-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docker-management-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount Docker socket to manage host's Docker daemon
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Mount database for persistence
+      - ./app.db:/app/app.db
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./app.db
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-this-in-production}
+      - DOCKER_HOST=http+unix://%2Fvar%2Frun%2Fdocker.sock
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - docker-api-network
+
+networks:
+  docker-api-network:
+    driver: bridge
